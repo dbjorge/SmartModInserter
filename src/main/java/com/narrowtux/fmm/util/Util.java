@@ -12,6 +12,8 @@ import javafx.scene.Node;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
@@ -193,5 +195,11 @@ public class Util {
                 thread.interrupt();
             }
         }
+    }
+
+    public static Path tryGetEnvPath(String environementVariableName) {
+        String maybeEnvValue = System.getenv(environementVariableName);
+        if (maybeEnvValue == null) return null;
+        return Paths.get(maybeEnvValue);
     }
 }

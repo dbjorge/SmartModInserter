@@ -31,8 +31,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.logging.Logger;
 
 public class FactorioModManagerApplication extends Application {
+    private static final Logger LOGGER = Logger.getLogger(FactorioModManagerApplication.class.getName());
 
     private SettingsWindowController settingsWindowController;
     private Stage settingsStage;
@@ -67,15 +69,13 @@ public class FactorioModManagerApplication extends Application {
                 store.setDataDir(appData.resolve("factorio"));
                 store.setStorageDir(appData.resolve("FactorioModManager"));
 
-                Path steamPath = WindowsUtil.TryGetSteamPathFromRegistry();
-                Path programFiles = Paths.get(System.getenv("PROGRAMFILES"));
-                Path programFilesX86 = Paths.get(System.getenv("PROGRAMFILES(X86)"));
+                Path maybeSteamPath = WindowsUtil.TryGetSteamPathFromRegistry();
+                Path maybeSteamAppsCommonPath = maybeSteamPath != null ? maybeSteamPath.resolve("SteamApps\\Common") : null;
 
-                setFactorioApplicationToFirstExistingPath(store,
-                    steamPath.resolve("SteamApps\\common\\Factorio\\bin\\x64\\Factorio.exe"),
-                    steamPath.resolve("SteamApps\\common\\Factorio\\bin\\i386\\Factorio.exe"),
-                    programFiles.resolve("\\Factorio\\bin\\x64\\Factorio.exe"),
-                    programFilesX86.resolve("\\Factorio\\bin\\i386\\Factorio.exe"));
+                store.setFactorioApplication(lookForFactorioApplicationUnder(
+                    maybeSteamAppsCommonPath,
+                    Util.tryGetEnvPath("PROGRAMFILES"),
+                    Util.tryGetEnvPath("PROGRAMFILES(X86)")));
             } else {
                 String xdgConf = System.getenv("XDG_CONFIG_DIR");
                 String xdgData = System.getenv("XDG_DATA_HOME");
@@ -88,12 +88,10 @@ public class FactorioModManagerApplication extends Application {
                 store.setStorageDir(Paths.get(xdgConf, "FactorioModManager"));
                 store.setDataDir(Paths.get(System.getenv("HOME"), ".factorio"));
 
-                setFactorioApplicationToFirstExistingPath(store,
-                    Paths.get("/usr/bin/factorio"),
-                    Paths.get(xdgData, "steam/SteamApps/common/Factorio/bin/x64/factorio"),
-                    Paths.get(xdgData, "steam/SteamApps/common/Factorio/bin/i386/factorio"),
-                    Paths.get(System.getenv("HOME"), "factorio/bin/x64/factorio"),
-                    Paths.get(System.getenv("HOME"), "factorio/bin/i386/factorio"));
+                store.setFactorioApplication(lookForFactorioApplicationUnder(
+                    Paths.get("/usr/bin"),
+                    Paths.get(xdgData, "steam/SteamApps/common"),
+                    Paths.get(System.getenv("HOME"))));
             }
 
             Path settingsPath = store.getStorageDir().resolve("settings.json");
@@ -129,13 +127,31 @@ public class FactorioModManagerApplication extends Application {
         }
     }
 
-    private void setFactorioApplicationToFirstExistingPath(Datastore store, Path... possibleApplicationPaths) {
-        for (Path exePath : possibleApplicationPaths) {
-            if (Files.exists(exePath)) {
-                store.setFactorioApplication(exePath);
-                break;
+    private Path lookForFactorioApplicationUnder(Path... optionalFactorioInstallDirectoryParents) {
+        String[] possibleFactorioApplicationSubpaths = new String[] {
+            "Factorio/bin/x64/factorio.exe",
+            "Factorio/bin/i386/factorio.exe",
+            "factorio.exe",
+            "Factorio/bin/x64/factorio",
+            "Factorio/bin/i386/factorio",
+            "factorio",
+        };
+
+        for (Path parentCandidate : optionalFactorioInstallDirectoryParents) {
+            if (parentCandidate == null) continue;
+            LOGGER.info("Searching " + parentCandidate.toString() + " for Factorio application");
+
+            for (String subpathCandidate : possibleFactorioApplicationSubpaths) {
+                Path candidateExePath = parentCandidate.resolve(subpathCandidate);
+                if (Files.exists(candidateExePath) && !Files.isDirectory(candidateExePath)) {
+                    LOGGER.info("Found factorio application at " + candidateExePath);
+                    return candidateExePath;
+                }
             }
         }
+
+        LOGGER.warning("Could not find Factorio application");
+        return null;
     }
 
     private void loadSettingsWindow() throws IOException {
