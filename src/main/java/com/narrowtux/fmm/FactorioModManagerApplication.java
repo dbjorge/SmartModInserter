@@ -2,27 +2,17 @@ package com.narrowtux.fmm;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.narrowtux.fmm.gui.GuiFiles;
-import com.narrowtux.fmm.gui.ModsTabController;
-import com.narrowtux.fmm.gui.SavesTabController;
+import com.narrowtux.fmm.gui.*;
 import com.narrowtux.fmm.io.URISchemeHandler;
 import com.narrowtux.fmm.io.dirwatch.SimpleDirectoryWatchService;
-import com.narrowtux.fmm.gui.MainWindowController;
-import com.narrowtux.fmm.gui.SettingsWindowController;
 import com.narrowtux.fmm.io.tasks.TaskService;
 import com.narrowtux.fmm.model.Datastore;
 import com.narrowtux.fmm.util.OS;
-import com.narrowtux.fmm.util.OSXAppleEventHelper;
 import com.narrowtux.fmm.util.Util;
 import com.narrowtux.fmm.util.WindowsUtil;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.application.Preloader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.stage.Stage;
 
 import java.io.FileReader;
@@ -30,12 +20,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
-import java.util.logging.Logger;
 
 public class FactorioModManagerApplication extends Application {
-    private static final Logger LOGGER = Logger.getLogger(FactorioModManagerApplication.class.getName());
-
     private SettingsWindowController settingsWindowController;
     private Stage settingsStage;
 
@@ -139,18 +125,15 @@ public class FactorioModManagerApplication extends Application {
 
         for (Path parentCandidate : optionalFactorioInstallDirectoryParents) {
             if (parentCandidate == null) continue;
-            LOGGER.info("Searching " + parentCandidate.toString() + " for Factorio application");
 
             for (String subpathCandidate : possibleFactorioApplicationSubpaths) {
                 Path candidateExePath = parentCandidate.resolve(subpathCandidate);
                 if (Files.exists(candidateExePath) && !Files.isDirectory(candidateExePath)) {
-                    LOGGER.info("Found factorio application at " + candidateExePath);
                     return candidateExePath;
                 }
             }
         }
 
-        LOGGER.warning("Could not find Factorio application");
         return null;
     }
 
