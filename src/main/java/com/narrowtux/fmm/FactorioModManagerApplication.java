@@ -77,20 +77,12 @@ public class FactorioModManagerApplication extends Application {
                 store.setStorageDir(Paths.get(xdgConf, "FactorioModManager"));
                 store.setDataDir(Paths.get(System.getenv("HOME"), ".factorio"));
 
-                Path[] possibleExe = {
+                setFactorioApplicationToFirstExistingPath(store,
                     Paths.get("/usr/bin/factorio"),
                     Paths.get(xdgData, "steam/SteamApps/common/Factorio/bin/x64/factorio"),
                     Paths.get(xdgData, "steam/SteamApps/common/Factorio/bin/i386/factorio"),
                     Paths.get(System.getenv("HOME"), "factorio/bin/x64/factorio"),
-                    Paths.get(System.getenv("HOME"), "factorio/bin/i386/factorio"),
-                };
-
-                for (Path exePath : possibleExe) {
-                    if (Files.exists(exePath)) {
-                        store.setFactorioApplication(exePath);
-                        break;
-                    }
-                }
+                    Paths.get(System.getenv("HOME"), "factorio/bin/i386/factorio"));
             }
 
             Path settingsPath = store.getStorageDir().resolve("settings.json");
@@ -123,6 +115,15 @@ public class FactorioModManagerApplication extends Application {
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
+        }
+    }
+
+    private void setFactorioApplicationToFirstExistingPath(Datastore store, Path... possibleApplicationPaths) {
+        for (Path exePath : possibleApplicationPaths) {
+            if (Files.exists(exePath)) {
+                store.setFactorioApplication(exePath);
+                break;
+            }
         }
     }
 
