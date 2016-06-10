@@ -14,6 +14,7 @@ import com.narrowtux.fmm.model.Datastore;
 import com.narrowtux.fmm.util.OS;
 import com.narrowtux.fmm.util.OSXAppleEventHelper;
 import com.narrowtux.fmm.util.Util;
+import com.narrowtux.fmm.util.WindowsUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.application.Preloader;
@@ -65,6 +66,16 @@ public class FactorioModManagerApplication extends Application {
                 Path appData = Paths.get(System.getenv("AppData"));
                 store.setDataDir(appData.resolve("factorio"));
                 store.setStorageDir(appData.resolve("FactorioModManager"));
+
+                Path steamPath = WindowsUtil.TryGetSteamPathFromRegistry();
+                Path programFiles = Paths.get(System.getenv("PROGRAMFILES"));
+                Path programFilesX86 = Paths.get(System.getenv("PROGRAMFILES(X86)"));
+
+                setFactorioApplicationToFirstExistingPath(store,
+                    steamPath.resolve("SteamApps\\common\\Factorio\\bin\\x64\\Factorio.exe"),
+                    steamPath.resolve("SteamApps\\common\\Factorio\\bin\\i386\\Factorio.exe"),
+                    programFiles.resolve("\\Factorio\\bin\\x64\\Factorio.exe"),
+                    programFilesX86.resolve("\\Factorio\\bin\\i386\\Factorio.exe"));
             } else {
                 String xdgConf = System.getenv("XDG_CONFIG_DIR");
                 String xdgData = System.getenv("XDG_DATA_HOME");
