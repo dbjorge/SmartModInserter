@@ -55,7 +55,7 @@ public class FactorioModManagerApplication extends Application {
                 store.setDataDir(appData.resolve("factorio"));
                 store.setStorageDir(appData.resolve("FactorioModManager"));
 
-                Path maybeSteamPath = WindowsUtil.TryGetSteamPathFromRegistry();
+                Path maybeSteamPath = WindowsUtil.getSteamPathFromRegistry();
                 Path maybeSteamAppsCommonPath = maybeSteamPath != null ? maybeSteamPath.resolve("SteamApps\\Common") : null;
 
                 store.setFactorioApplication(lookForFactorioApplicationUnder(
